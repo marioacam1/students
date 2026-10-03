@@ -1,4 +1,4 @@
 const CONFIG = {
-  SUPABASE_URL: 'https://deyovxfgkhywdhohrgeb.supabase.co',
-  SUPABASE_ANON_KEY: 'sb_publishable_-fovlJpSTKgfZSzik-qghg_lrXJ8bdG'
+  SUPABASE_URL: 'https://fhvampkmbuttffkjtahy.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_blLbsqVWuYKkIonYOPOG3g_-wlntVBW'
 }

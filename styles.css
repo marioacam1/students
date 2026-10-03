@@ -66,6 +66,18 @@ nav {
 .view { display: none; padding: 32px; max-width: 1200px; margin: 0 auto; }
 .view.active { display: block; }
 
+#view-chart {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+#view-chart.active {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
 .card {
   background: var(--surface);
   border-radius: 18px;
@@ -95,7 +107,39 @@ h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; letter-spacing: -0
 .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 32px; font-weight: 400; }
 
 /* CHART */
-#myChart { max-height: 420px; }
+#view-chart {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+#view-chart.active {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+#view-chart .card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+#view-chart .card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+#view-chart .card .subtitle {
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+#view-chart canvas {
+  max-height: 300px;
+  width: 100% !important;
+  height: auto !important;
+}
 
 /* TABLE */
 .table-wrapper { overflow-x: auto; margin-top: 16px; border-radius: 12px; overflow: hidden; }

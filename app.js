@@ -28,7 +28,7 @@ function showToast(msg) {
 
 // ─── GRÁFICA ─────────────────────────────────────────────────────────────────
 // Promedio de math/reading/writing agrupado por parental_education
-async function renderChart() {
+async function renderParentalEducationChart() {
   const { data, error } = await db.from('students').select('parental_education, math_score, reading_score, writing_score')
   if (error) { console.error(error); return }
 
@@ -81,17 +81,17 @@ async function renderChart() {
     options: {
       responsive: true,
       plugins: {
-        legend: { 
-          labels: { 
+        legend: {
+          labels: {
             color: '#1d1d1f',
             font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
-          } 
+          }
         },
       },
       scales: {
-        x: { 
-          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } }, 
-          grid: { color: '#e5e5ea' } 
+        x: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' }
         },
         y: {
           ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
@@ -102,6 +102,355 @@ async function renderChart() {
       }
     }
   })
+}
+
+// Distribución por género
+async function renderGenderChart() {
+  const { data, error } = await db.from('students').select('gender')
+  if (error) { console.error(error); return }
+
+  const counts = { male: 0, female: 0 }
+  data.forEach(r => counts[r.gender]++)
+
+  const ctx = document.getElementById('genderChart').getContext('2d')
+
+  if (window._genderChart) window._genderChart.destroy()
+
+  window._genderChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Masculino', 'Femenino'],
+      datasets: [{
+        data: [counts.male, counts.female],
+        backgroundColor: ['rgba(0,113,227,0.8)', 'rgba(255,59,48,0.8)'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        }
+      }
+    }
+  })
+}
+
+// Distribución por etnia
+async function renderEthnicityChart() {
+  const { data, error } = await db.from('students').select('ethnicity')
+  if (error) { console.error(error); return }
+
+  const counts = {}
+  data.forEach(r => counts[r.ethnicity] = (counts[r.ethnicity] || 0) + 1)
+
+  const ctx = document.getElementById('ethnicityChart').getContext('2d')
+
+  if (window._ethnicityChart) window._ethnicityChart.destroy()
+
+  window._ethnicityChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(counts).map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+      datasets: [{
+        data: Object.values(counts),
+        backgroundColor: [
+          'rgba(0,113,227,0.8)',
+          'rgba(52,199,89,0.8)',
+          'rgba(255,159,10,0.8)',
+          'rgba(255,59,48,0.8)',
+          'rgba(175,82,222,0.8)'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        }
+      }
+    }
+  })
+}
+
+// Impacto de preparación de examen
+async function renderTestPrepChart() {
+  const { data, error } = await db.from('students').select('test_prep, math_score, reading_score, writing_score')
+  if (error) { console.error(error); return }
+
+  const groups = { none: { math: [], reading: [], writing: [] }, completed: { math: [], reading: [], writing: [] } }
+  data.forEach(r => {
+    groups[r.test_prep].math.push(r.math_score)
+    groups[r.test_prep].reading.push(r.reading_score)
+    groups[r.test_prep].writing.push(r.writing_score)
+  })
+
+  const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+
+  const ctx = document.getElementById('testPrepChart').getContext('2d')
+
+  if (window._testPrepChart) window._testPrepChart.destroy()
+
+  window._testPrepChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Sin Preparación', 'Con Preparación'],
+      datasets: [
+        {
+          label: 'Matemáticas',
+          data: [avg(groups.none.math), avg(groups.completed.math)],
+          backgroundColor: 'rgba(0,113,227,0.8)',
+          borderRadius: 8,
+        },
+        {
+          label: 'Lectura',
+          data: [avg(groups.none.reading), avg(groups.completed.reading)],
+          backgroundColor: 'rgba(52,199,89,0.8)',
+          borderRadius: 8,
+        },
+        {
+          label: 'Escritura',
+          data: [avg(groups.none.writing), avg(groups.completed.writing)],
+          backgroundColor: 'rgba(255,159,10,0.8)',
+          borderRadius: 8,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' }
+        },
+        y: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' },
+          min: 50, max: 80,
+          title: { display: true, text: 'Promedio', color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } }
+        }
+      }
+    }
+  })
+}
+
+// Impacto del tipo de almuerzo
+async function renderLunchChart() {
+  const { data, error } = await db.from('students').select('lunch, math_score, reading_score, writing_score')
+  if (error) { console.error(error); return }
+
+  const groups = { standard: { math: [], reading: [], writing: [] }, 'free/reduced': { math: [], reading: [], writing: [] } }
+  data.forEach(r => {
+    groups[r.lunch].math.push(r.math_score)
+    groups[r.lunch].reading.push(r.reading_score)
+    groups[r.lunch].writing.push(r.writing_score)
+  })
+
+  const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+
+  const ctx = document.getElementById('lunchChart').getContext('2d')
+
+  if (window._lunchChart) window._lunchChart.destroy()
+
+  window._lunchChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Estándar', 'Gratis/Reducido'],
+      datasets: [
+        {
+          label: 'Matemáticas',
+          data: [avg(groups.standard.math), avg(groups['free/reduced'].math)],
+          backgroundColor: 'rgba(0,113,227,0.8)',
+          borderRadius: 8,
+        },
+        {
+          label: 'Lectura',
+          data: [avg(groups.standard.reading), avg(groups['free/reduced'].reading)],
+          backgroundColor: 'rgba(52,199,89,0.8)',
+          borderRadius: 8,
+        },
+        {
+          label: 'Escritura',
+          data: [avg(groups.standard.writing), avg(groups['free/reduced'].writing)],
+          backgroundColor: 'rgba(255,159,10,0.8)',
+          borderRadius: 8,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' }
+        },
+        y: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' },
+          min: 50, max: 80,
+          title: { display: true, text: 'Promedio', color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } }
+        }
+      }
+    }
+  })
+}
+
+// Correlación entre materias
+async function renderCorrelationChart() {
+  const { data, error } = await db.from('students').select('math_score, reading_score, writing_score')
+  if (error) { console.error(error); return }
+
+  const avg = arr => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
+
+  const mathAvg = avg(data.map(r => r.math_score))
+  const readingAvg = avg(data.map(r => r.reading_score))
+  const writingAvg = avg(data.map(r => r.writing_score))
+
+  const ctx = document.getElementById('correlationChart').getContext('2d')
+
+  if (window._correlationChart) window._correlationChart.destroy()
+
+  window._correlationChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Matemáticas', 'Lectura', 'Escritura'],
+      datasets: [{
+        label: 'Promedio General',
+        data: [mathAvg, readingAvg, writingAvg],
+        backgroundColor: 'rgba(0,113,227,0.2)',
+        borderColor: 'rgba(0,113,227,1)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(0,113,227,1)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgba(0,113,227,1)'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        }
+      },
+      scales: {
+        r: {
+          angleLines: { color: '#e5e5ea' },
+          grid: { color: '#e5e5ea' },
+          pointLabels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          },
+          ticks: {
+            color: '#86868b',
+            backdropColor: 'transparent'
+          },
+          min: 50,
+          max: 80
+        }
+      }
+    }
+  })
+}
+
+// Tasa de aprobación por género
+async function renderPassRateChart() {
+  const { data, error } = await db.from('students').select('gender, pass_math')
+  if (error) { console.error(error); return }
+
+  const counts = { male: { total: 0, pass: 0 }, female: { total: 0, pass: 0 } }
+  data.forEach(r => {
+    counts[r.gender].total++
+    if (r.pass_math === 1) counts[r.gender].pass++
+  })
+
+  const maleRate = Math.round((counts.male.pass / counts.male.total) * 100)
+  const femaleRate = Math.round((counts.female.pass / counts.female.total) * 100)
+
+  const ctx = document.getElementById('passRateChart').getContext('2d')
+
+  if (window._passRateChart) window._passRateChart.destroy()
+
+  window._passRateChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Masculino', 'Femenino'],
+      datasets: [{
+        label: 'Tasa de Aprobación %',
+        data: [maleRate, femaleRate],
+        backgroundColor: ['rgba(0,113,227,0.8)', 'rgba(255,59,48,0.8)'],
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#1d1d1f',
+            font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' }
+        },
+        y: {
+          ticks: { color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } },
+          grid: { color: '#e5e5ea' },
+          min: 0, max: 100,
+          title: { display: true, text: 'Porcentaje', color: '#86868b', font: { family: '-apple-system, BlinkMacSystemFont, sans-serif' } }
+        }
+      }
+    }
+  })
+}
+
+// Función principal para renderizar todos los gráficos
+async function renderChart() {
+  await Promise.all([
+    renderParentalEducationChart(),
+    renderGenderChart(),
+    renderEthnicityChart(),
+    renderTestPrepChart(),
+    renderLunchChart(),
+    renderCorrelationChart(),
+    renderPassRateChart()
+  ])
 }
 
 // ─── TABLA ───────────────────────────────────────────────────────────────────
